@@ -1,10 +1,58 @@
 
 import { Book, ShoppingCart, Mail, Sun, Moon, Globe } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn, type Language, languages } from "@/lib/utils";
 
 const Index = () => {
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [lang, setLang] = useState<Language>("ar");
+  const [cart, setCart] = useState<number[]>([]);
+
+  const toggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    document.documentElement.classList.toggle("dark");
+  };
+
+  const toggleLanguage = () => {
+    const currentIndex = languages.indexOf(lang);
+    const nextIndex = (currentIndex + 1) % languages.length;
+    setLang(languages[nextIndex]);
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  };
+
+  const addToCart = (bookId: number) => {
+    setCart([...cart, bookId]);
+  };
+
+  const content = {
+    ar: {
+      title: "اكتشف عالماً من الكتب",
+      subtitle: "وجهتك المميزة للكتب العربية والعالمية. شحن مجاني للطلبات التي تزيد عن 50 دولار",
+      browse: "تصفح الكتب",
+      featured: "الكتب المميزة",
+      price: "السعر",
+      addToCart: "أضف إلى السلة",
+    },
+    en: {
+      title: "Discover the World Through Books",
+      subtitle: "Your premium destination for Arabic and international literature. Free shipping worldwide on orders over $50.",
+      browse: "Browse Books",
+      featured: "Featured Books",
+      price: "Price",
+      addToCart: "Add to Cart",
+    },
+    fr: {
+      title: "Découvrez le Monde à Travers les Livres",
+      subtitle: "Votre destination premium pour la littérature arabe et internationale. Livraison gratuite dans le monde entier pour les commandes de plus de 50$.",
+      browse: "Parcourir les Livres",
+      featured: "Livres en Vedette",
+      price: "Prix",
+      addToCart: "Ajouter au Panier",
+    }
+  };
+
+  const t = content[lang];
 
   return (
     <div className={cn(
@@ -12,23 +60,45 @@ const Index = () => {
       theme === "dark" ? "dark" : ""
     )}>
       {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-lg shadow-sm z-50">
+      <nav className="fixed top-0 w-full bg-white/80 dark:bg-black/80 backdrop-blur-lg shadow-sm z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 rtl:space-x-reverse">
             <h1 className="text-2xl font-arabic font-bold text-primary">قارئ</h1>
             <span className="text-text-light">Qari</span>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 rtl:space-x-reverse">
             <button 
-              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              onClick={toggleTheme}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label={theme === "light" ? "تفعيل الوضع الليلي" : "تفعيل الوضع النهاري"}
             >
               {theme === "light" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </button>
-            <Globe className="w-5 h-5 text-primary" />
-            <Mail className="w-5 h-5 text-primary" />
-            <ShoppingCart className="w-5 h-5 text-primary" />
+            <button 
+              onClick={toggleLanguage}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="تغيير اللغة"
+            >
+              <Globe className="w-5 h-5 text-primary" />
+            </button>
+            <button 
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="البريد الإلكتروني"
+            >
+              <Mail className="w-5 h-5 text-primary" />
+            </button>
+            <button 
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative"
+              aria-label="عربة التسوق"
+            >
+              <ShoppingCart className="w-5 h-5 text-primary" />
+              {cart.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-accent text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                  {cart.length}
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </nav>
@@ -37,15 +107,14 @@ const Index = () => {
       <section className="pt-24 pb-16 px-4">
         <div className="container mx-auto">
           <div className="max-w-3xl mx-auto text-center space-y-6 animate-fade-in">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-text-dark">
-              Discover the World Through Books
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-text-dark font-arabic">
+              {t.title}
             </h1>
-            <p className="text-lg md:text-xl text-text-light">
-              Your premium destination for Arabic and international literature.
-              Free shipping worldwide on orders over $50.
+            <p className="text-lg md:text-xl text-text-light font-arabic">
+              {t.subtitle}
             </p>
-            <button className="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg transition-colors duration-300 animate-scale-in">
-              Browse Books
+            <button className="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg transition-colors duration-300 animate-scale-in font-arabic">
+              {t.browse}
             </button>
           </div>
         </div>
@@ -54,22 +123,26 @@ const Index = () => {
       {/* Featured Books */}
       <section className="py-16 bg-secondary">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-text-dark text-center mb-12">Featured Books</h2>
+          <h2 className="text-3xl font-bold text-text-dark text-center mb-12 font-arabic">{t.featured}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Sample Book Card - To be replaced with dynamic data */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:-translate-y-1 animate-scale-in">
-              <div className="aspect-[3/4] bg-gray-200"></div>
-              <div className="p-6">
-                <h3 className="font-bold text-lg text-text-dark mb-2">Book Title</h3>
-                <p className="text-text-light mb-4">Author Name</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-primary font-bold">$29.99</span>
-                  <button className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded transition-colors duration-300">
-                    Add to Cart
-                  </button>
+            {[1, 2, 3].map((bookId) => (
+              <div key={bookId} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:-translate-y-1 animate-scale-in">
+                <div className="aspect-[3/4] bg-gray-200 dark:bg-gray-700"></div>
+                <div className="p-6">
+                  <h3 className="font-bold text-lg text-text-dark dark:text-white mb-2 font-arabic">عنوان الكتاب</h3>
+                  <p className="text-text-light dark:text-gray-300 mb-4 font-arabic">اسم المؤلف</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-primary font-bold font-arabic">29.99 $</span>
+                    <button 
+                      onClick={() => addToCart(bookId)}
+                      className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded transition-colors duration-300 font-arabic"
+                    >
+                      {t.addToCart}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
