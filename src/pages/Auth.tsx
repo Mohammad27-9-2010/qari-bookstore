@@ -31,14 +31,14 @@ const Auth = () => {
         });
         if (error) throw error;
         toast({
-          title: "Success",
-          description: "Please check your email to verify your account",
+          title: "نجاح",
+          description: "يرجى التحقق من بريدك الإلكتروني للتحقق من حسابك",
         });
       }
       navigate('/');
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: "خطأ",
         description: error.message,
         variant: "destructive",
       });
