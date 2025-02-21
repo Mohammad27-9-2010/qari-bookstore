@@ -6,6 +6,7 @@ import { Minus, Plus, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import jsPDF from 'jspdf';
 
 interface CartModalProps {
   isOpen: boolean;
@@ -23,7 +24,6 @@ const translations = {
     total: "المجموع:",
     checkout: "إتمام الشراء",
     close: "إغلاق",
-    email: "البريد الإلكتروني",
     phone: "رقم الهاتف",
     submit: "تأكيد الطلب",
     checkoutSuccess: "تم تقديم طلبك بنجاح",
@@ -36,7 +36,6 @@ const translations = {
     total: "Total:",
     checkout: "Checkout",
     close: "Close",
-    email: "Email",
     phone: "Phone Number",
     submit: "Place Order",
     checkoutSuccess: "Your order has been placed successfully",
@@ -49,7 +48,6 @@ const translations = {
     total: "Total:",
     checkout: "Commander",
     close: "Fermer",
-    email: "Email",
     phone: "Numéro de téléphone",
     submit: "Confirmer la commande",
     checkoutSuccess: "Votre commande a été passée avec succès",
@@ -62,11 +60,49 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
   const { toast } = useToast();
   const t = translations[lang];
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
   const total = items.reduce((sum, item) => sum + item.book.price * item.quantity, 0);
+
+  const generateOrderPDF = (orderDetails: any) => {
+    const pdf = new jsPDF();
+    const textColor = '#000000';
+    
+    // Set up RTL for Arabic
+    if (lang === 'ar') {
+      pdf.setR2L(true);
+    }
+
+    // Add header
+    pdf.setFontSize(20);
+    pdf.setTextColor(textColor);
+    pdf.text(t.cart, 105, 20, { align: 'center' });
+
+    // Add order details
+    pdf.setFontSize(12);
+    let yPosition = 40;
+
+    // Add items
+    items.forEach((item) => {
+      pdf.text(`${item.book.title} x${item.quantity}`, 20, yPosition);
+      pdf.text(`$${(item.book.price * item.quantity).toFixed(2)}`, 180, yPosition, { align: 'right' });
+      yPosition += 10;
+    });
+
+    // Add total
+    pdf.setFontSize(14);
+    pdf.text('------------------------', 20, yPosition);
+    yPosition += 10;
+    pdf.text(`${t.total} $${total.toFixed(2)}`, 180, yPosition, { align: 'right' });
+
+    // Add contact info
+    yPosition += 20;
+    pdf.text(`${t.phone}: ${phoneNumber}`, 20, yPosition);
+
+    // Save the PDF
+    pdf.save(`order-${new Date().toISOString()}.pdf`);
+  };
 
   const startCheckout = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -81,7 +117,7 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
   };
 
   const handleCheckout = async () => {
-    if (!email || !phoneNumber) {
+    if (!phoneNumber) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -92,23 +128,47 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
 
     setIsProcessing(true);
     try {
-      const response = await supabase.functions.invoke('process-order', {
-        body: {
-          items,
-          email,
-          phoneNumber,
-          totalAmount: total,
-        },
-      });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
 
-      if (response.error) throw new Error(response.error.message);
+      const orderData = {
+        user_id: session.user.id,
+        total_amount: total,
+        shipping_address: { phone_number: phoneNumber },
+        status: 'pending'
+      };
+
+      // Insert the order into the database
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert(orderData)
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Insert order items
+      const orderItems = items.map(item => ({
+        order_id: order.id,
+        book_id: item.book.id,
+        quantity: item.quantity,
+        price_at_time: item.book.price
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Generate and download PDF
+      generateOrderPDF({ order, items });
 
       toast({
         title: t.checkoutSuccess,
       });
       onClose();
       setIsCheckingOut(false);
-      setEmail("");
       setPhoneNumber("");
     } catch (error) {
       console.error('Checkout error:', error);
@@ -177,19 +237,6 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
             </>
           ) : (
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1 font-arabic" htmlFor="email">
-                  {t.email}
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
               <div>
                 <label className="block text-sm font-medium mb-1 font-arabic" htmlFor="phone">
                   {t.phone}
