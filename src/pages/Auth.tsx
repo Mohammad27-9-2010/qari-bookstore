@@ -28,11 +28,17 @@ const Auth = () => {
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth`,
+            data: {
+              email_confirm: true // This will be used by RLS policies
+            }
+          }
         });
         if (error) throw error;
         toast({
           title: "نجاح",
-          description: "يرجى التحقق من بريدك الإلكتروني للتحقق من حسابك",
+          description: "تم إنشاء حسابك بنجاح",
         });
       }
       navigate('/');

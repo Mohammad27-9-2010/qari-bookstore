@@ -6,12 +6,16 @@ import type { Book as BookType, CartItem } from "@/types/cart";
 import { BookRating } from "@/components/BookRating";
 import { BookComments } from "@/components/BookComments";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [lang, setLang] = useState<Language>("ar");
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Sample books data
   const books: BookType[] = [
@@ -87,6 +91,8 @@ const Index = () => {
       featured: "الكتب المميزة",
       price: "السعر",
       addToCart: "أضف إلى السلة",
+      register: "سجل الآن للشراء والتقييم",
+      registerButton: "إنشاء حساب",
     },
     en: {
       title: "Discover the World Through Books",
@@ -95,6 +101,8 @@ const Index = () => {
       featured: "Featured Books",
       price: "Price",
       addToCart: "Add to Cart",
+      register: "Register now to purchase and rate books",
+      registerButton: "Create Account",
     },
     fr: {
       title: "Découvrez le Monde à Travers les Livres",
@@ -103,12 +111,12 @@ const Index = () => {
       featured: "Livres en Vedette",
       price: "Prix",
       addToCart: "Ajouter au Panier",
+      register: "Inscrivez-vous pour acheter et noter",
+      registerButton: "Créer un compte",
     }
   };
 
   const t = content[lang];
-
-  const { user } = useAuth();
 
   return (
     <div className={cn(
@@ -180,9 +188,26 @@ const Index = () => {
             <p className="text-lg md:text-xl text-text-light font-arabic">
               {t.subtitle}
             </p>
-            <button className="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg transition-colors duration-300 animate-scale-in font-arabic">
-              {t.browse}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button 
+                className="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg transition-colors duration-300 animate-scale-in font-arabic"
+                onClick={() => navigate(user ? "/" : "/auth")}
+              >
+                {t.browse}
+              </Button>
+              {!user && (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground font-arabic">{t.register}</p>
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate("/auth")}
+                    className="font-arabic"
+                  >
+                    {t.registerButton}
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
