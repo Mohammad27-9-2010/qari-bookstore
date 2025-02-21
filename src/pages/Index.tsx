@@ -2,11 +2,36 @@
 import { Book, ShoppingCart, Mail, Sun, Moon, Globe } from "lucide-react";
 import { useState } from "react";
 import { cn, type Language, languages } from "@/lib/utils";
+import { CartModal } from "@/components/CartModal";
+import type { Book as BookType, CartItem } from "@/types/cart";
 
 const Index = () => {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [lang, setLang] = useState<Language>("ar");
-  const [cart, setCart] = useState<number[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+
+  // Sample books data
+  const books: BookType[] = [
+    {
+      id: 1,
+      title: "كتاب الأيام",
+      author: "طه حسين",
+      price: 29.99,
+    },
+    {
+      id: 2,
+      title: "مقدمة ابن خلدون",
+      author: "ابن خلدون",
+      price: 34.99,
+    },
+    {
+      id: 3,
+      title: "ألف ليلة وليلة",
+      author: "مؤلف مجهول",
+      price: 24.99,
+    },
+  ];
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
@@ -22,7 +47,34 @@ const Index = () => {
   };
 
   const addToCart = (bookId: number) => {
-    setCart([...cart, bookId]);
+    const book = books.find((b) => b.id === bookId);
+    if (!book) return;
+
+    setCartItems((prevItems) => {
+      const existingItem = prevItems.find((item) => item.book.id === bookId);
+      if (existingItem) {
+        return prevItems.map((item) =>
+          item.book.id === bookId
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      }
+      return [...prevItems, { book, quantity: 1 }];
+    });
+  };
+
+  const updateCartItemQuantity = (bookId: number, change: number) => {
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
+        item.book.id === bookId
+          ? { ...item, quantity: Math.max(1, item.quantity + change) }
+          : item
+      )
+    );
+  };
+
+  const removeCartItem = (bookId: number) => {
+    setCartItems((prevItems) => prevItems.filter((item) => item.book.id !== bookId));
   };
 
   const content = {
@@ -89,19 +141,30 @@ const Index = () => {
               <Mail className="w-5 h-5 text-primary" />
             </button>
             <button 
+              onClick={() => setIsCartOpen(true)}
               className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative"
               aria-label="عربة التسوق"
             >
               <ShoppingCart className="w-5 h-5 text-primary" />
-              {cart.length > 0 && (
+              {cartItems.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-accent text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                  {cart.length}
+                  {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
                 </span>
               )}
             </button>
           </div>
         </div>
       </nav>
+
+      {/* Cart Modal */}
+      <CartModal
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        items={cartItems}
+        onUpdateQuantity={updateCartItemQuantity}
+        onRemoveItem={removeCartItem}
+        lang={lang}
+      />
 
       {/* Hero Section */}
       <section className="pt-24 pb-16 px-4">
@@ -125,16 +188,16 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-text-dark text-center mb-12 font-arabic">{t.featured}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map((bookId) => (
-              <div key={bookId} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:-translate-y-1 animate-scale-in">
+            {books.map((book) => (
+              <div key={book.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:-translate-y-1 animate-scale-in">
                 <div className="aspect-[3/4] bg-gray-200 dark:bg-gray-700"></div>
                 <div className="p-6">
-                  <h3 className="font-bold text-lg text-text-dark dark:text-white mb-2 font-arabic">عنوان الكتاب</h3>
-                  <p className="text-text-light dark:text-gray-300 mb-4 font-arabic">اسم المؤلف</p>
+                  <h3 className="font-bold text-lg text-text-dark dark:text-white mb-2 font-arabic">{book.title}</h3>
+                  <p className="text-text-light dark:text-gray-300 mb-4 font-arabic">{book.author}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-primary font-bold font-arabic">29.99 $</span>
+                    <span className="text-primary font-bold font-arabic">{book.price} $</span>
                     <button 
-                      onClick={() => addToCart(bookId)}
+                      onClick={() => addToCart(book.id)}
                       className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded transition-colors duration-300 font-arabic"
                     >
                       {t.addToCart}
