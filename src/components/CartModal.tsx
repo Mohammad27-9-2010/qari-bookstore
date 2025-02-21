@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { CartItem } from "@/types/cart";
 import { Minus, Plus, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CartModalProps {
   isOpen: boolean;
@@ -21,6 +23,12 @@ const translations = {
     total: "المجموع:",
     checkout: "إتمام الشراء",
     close: "إغلاق",
+    email: "البريد الإلكتروني",
+    phone: "رقم الهاتف",
+    submit: "تأكيد الطلب",
+    checkoutSuccess: "تم تقديم طلبك بنجاح",
+    checkoutError: "حدث خطأ أثناء معالجة طلبك",
+    loginRequired: "يرجى تسجيل الدخول للمتابعة",
   },
   en: {
     cart: "Shopping Cart",
@@ -28,6 +36,12 @@ const translations = {
     total: "Total:",
     checkout: "Checkout",
     close: "Close",
+    email: "Email",
+    phone: "Phone Number",
+    submit: "Place Order",
+    checkoutSuccess: "Your order has been placed successfully",
+    checkoutError: "An error occurred while processing your order",
+    loginRequired: "Please log in to continue",
   },
   fr: {
     cart: "Panier",
@@ -35,20 +49,77 @@ const translations = {
     total: "Total:",
     checkout: "Commander",
     close: "Fermer",
+    email: "Email",
+    phone: "Numéro de téléphone",
+    submit: "Confirmer la commande",
+    checkoutSuccess: "Votre commande a été passée avec succès",
+    checkoutError: "Une erreur est survenue lors du traitement de votre commande",
+    loginRequired: "Veuillez vous connecter pour continuer",
   }
 };
 
 export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem, lang }: CartModalProps) => {
   const { toast } = useToast();
   const t = translations[lang];
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const total = items.reduce((sum, item) => sum + item.book.price * item.quantity, 0);
 
-  const handleCheckout = () => {
-    toast({
-      title: "Coming soon!",
-      description: "Checkout functionality will be implemented soon.",
-    });
+  const startCheckout = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({
+        title: t.loginRequired,
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsCheckingOut(true);
+  };
+
+  const handleCheckout = async () => {
+    if (!email || !phoneNumber) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const response = await supabase.functions.invoke('process-order', {
+        body: {
+          items,
+          email,
+          phoneNumber,
+          totalAmount: total,
+        },
+      });
+
+      if (response.error) throw new Error(response.error.message);
+
+      toast({
+        title: t.checkoutSuccess,
+      });
+      onClose();
+      setIsCheckingOut(false);
+      setEmail("");
+      setPhoneNumber("");
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast({
+        title: t.checkoutError,
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -60,7 +131,7 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
         <div className="mt-4 space-y-4">
           {items.length === 0 ? (
             <p className="text-center text-gray-500 font-arabic">{t.empty}</p>
-          ) : (
+          ) : !isCheckingOut ? (
             <>
               {items.map((item) => (
                 <div key={item.book.id} className="flex items-center justify-between p-2 border rounded">
@@ -100,10 +171,46 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
                 <span className="font-bold font-arabic">{t.total}</span>
                 <span className="font-bold">{total.toFixed(2)} $</span>
               </div>
-              <Button className="w-full font-arabic" onClick={handleCheckout}>
+              <Button className="w-full font-arabic" onClick={startCheckout}>
                 {t.checkout}
               </Button>
             </>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1 font-arabic" htmlFor="email">
+                  {t.email}
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 font-arabic" htmlFor="phone">
+                  {t.phone}
+                </label>
+                <input
+                  id="phone"
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <Button 
+                className="w-full font-arabic" 
+                onClick={handleCheckout}
+                disabled={isProcessing}
+              >
+                {t.submit}
+              </Button>
+            </div>
           )}
         </div>
       </DialogContent>
