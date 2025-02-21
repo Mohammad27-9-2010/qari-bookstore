@@ -12,8 +12,8 @@ interface CartModalProps {
   isOpen: boolean;
   onClose: () => void;
   items: CartItem[];
-  onUpdateQuantity: (bookId: number, change: number) => void;
-  onRemoveItem: (bookId: number) => void;
+  onUpdateQuantity: (bookId: string, change: number) => void;  // Updated to use string
+  onRemoveItem: (bookId: string) => void;  // Updated to use string
   lang: "en" | "ar" | "fr";
 }
 
@@ -150,7 +150,7 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
       // Insert order items
       const orderItems = items.map(item => ({
         order_id: order.id,
-        book_id: item.book.id,
+        book_id: item.book.id,  // Now this will be a string
         quantity: item.quantity,
         price_at_time: item.book.price
       }));
