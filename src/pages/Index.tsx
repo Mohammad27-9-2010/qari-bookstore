@@ -1,9 +1,11 @@
-
 import { Book, ShoppingCart, Mail, Sun, Moon, Globe } from "lucide-react";
 import { useState } from "react";
 import { cn, type Language, languages } from "@/lib/utils";
 import { CartModal } from "@/components/CartModal";
 import type { Book as BookType, CartItem } from "@/types/cart";
+import { BookRating } from "@/components/BookRating";
+import { BookComments } from "@/components/BookComments";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -14,19 +16,19 @@ const Index = () => {
   // Sample books data
   const books: BookType[] = [
     {
-      id: 1,
+      id: "1",
       title: "كتاب الأيام",
       author: "طه حسين",
       price: 29.99,
     },
     {
-      id: 2,
+      id: "2",
       title: "مقدمة ابن خلدون",
       author: "ابن خلدون",
       price: 34.99,
     },
     {
-      id: 3,
+      id: "3",
       title: "ألف ليلة وليلة",
       author: "مؤلف مجهول",
       price: 24.99,
@@ -46,7 +48,7 @@ const Index = () => {
     document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
   };
 
-  const addToCart = (bookId: number) => {
+  const addToCart = (bookId: string) => {
     const book = books.find((b) => b.id === bookId);
     if (!book) return;
 
@@ -63,7 +65,7 @@ const Index = () => {
     });
   };
 
-  const updateCartItemQuantity = (bookId: number, change: number) => {
+  const updateCartItemQuantity = (bookId: string, change: number) => {
     setCartItems((prevItems) =>
       prevItems.map((item) =>
         item.book.id === bookId
@@ -73,7 +75,7 @@ const Index = () => {
     );
   };
 
-  const removeCartItem = (bookId: number) => {
+  const removeCartItem = (bookId: string) => {
     setCartItems((prevItems) => prevItems.filter((item) => item.book.id !== bookId));
   };
 
@@ -105,6 +107,8 @@ const Index = () => {
   };
 
   const t = content[lang];
+
+  const { user } = useAuth();
 
   return (
     <div className={cn(
@@ -191,7 +195,7 @@ const Index = () => {
             {books.map((book) => (
               <div key={book.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:-translate-y-1 animate-scale-in">
                 <div className="aspect-[3/4] bg-gray-200 dark:bg-gray-700"></div>
-                <div className="p-6">
+                <div className="p-6 space-y-4">
                   <h3 className="font-bold text-lg text-text-dark dark:text-white mb-2 font-arabic">{book.title}</h3>
                   <p className="text-text-light dark:text-gray-300 mb-4 font-arabic">{book.author}</p>
                   <div className="flex items-center justify-between">
@@ -202,6 +206,12 @@ const Index = () => {
                     >
                       {t.addToCart}
                     </button>
+                  </div>
+                  <div className="pt-4 border-t">
+                    <BookRating bookId={book.id} />
+                  </div>
+                  <div className="pt-4 border-t">
+                    <BookComments bookId={book.id} />
                   </div>
                 </div>
               </div>
