@@ -1,5 +1,4 @@
-
-import { Book, ShoppingCart, Mail, Sun, Moon, Globe } from "lucide-react";
+import { Book, ShoppingCart, Mail, Sun, Moon, Globe, Search } from "lucide-react";
 import { useState } from "react";
 import { cn, type Language, languages } from "@/lib/utils";
 import { CartModal } from "@/components/CartModal";
@@ -9,12 +8,14 @@ import { BookComments } from "@/components/BookComments";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const Index = () => {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [lang, setLang] = useState<Language>("ar");
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -42,6 +43,14 @@ const Index = () => {
       category: "أدب كلاسيكي"
     },
   ];
+
+  const filteredBooks = books.filter((book) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      book.title.toLowerCase().includes(query) ||
+      book.author.toLowerCase().includes(query)
+    );
+  });
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
@@ -98,6 +107,7 @@ const Index = () => {
       addToCart: "أضف إلى السلة",
       register: "سجل الآن للشراء والتقييم",
       registerButton: "إنشاء حساب",
+      search: "ابحث عن الكتب",
     },
     en: {
       title: "Discover the World Through Books",
@@ -109,6 +119,7 @@ const Index = () => {
       addToCart: "Add to Cart",
       register: "Register now to purchase and rate books",
       registerButton: "Create Account",
+      search: "Search books",
     },
     fr: {
       title: "Découvrez le Monde à Travers les Livres",
@@ -120,6 +131,7 @@ const Index = () => {
       addToCart: "Ajouter au Panier",
       register: "Inscrivez-vous pour acheter et noter",
       registerButton: "Créer un compte",
+      search: "Rechercher des livres",
     }
   };
 
@@ -219,12 +231,30 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Search Bar */}
+      <section className="py-8 bg-white dark:bg-gray-800">
+        <div className="container mx-auto px-4">
+          <div className="max-w-xl mx-auto">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Input
+                type="text"
+                placeholder={t.search}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 w-full"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Featured Books */}
       <section className="py-16 bg-secondary">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-text-dark text-center mb-12 font-arabic">{t.featured}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {books.map((book) => (
+            {filteredBooks.map((book) => (
               <div key={book.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:-translate-y-1 animate-scale-in">
                 <div className="aspect-[3/4] bg-gray-200 dark:bg-gray-700"></div>
                 <div className="p-6 space-y-4">
@@ -257,4 +287,3 @@ const Index = () => {
 };
 
 export default Index;
-
