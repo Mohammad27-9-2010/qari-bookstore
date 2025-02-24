@@ -1,9 +1,10 @@
 
 export interface Book {
-  id: string;  // Changed from number to string
+  id: string;  // UUID type
   title: string;
   author: string;
   price: number;
+  category?: string;
 }
 
 export interface CartItem {

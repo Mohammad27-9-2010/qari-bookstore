@@ -11,21 +11,21 @@ export type Database = {
     Tables: {
       book_comments: {
         Row: {
-          book_id: string | null
+          book_id: string
           comment: string
           created_at: string | null
           id: string
           user_id: string | null
         }
         Insert: {
-          book_id?: string | null
+          book_id: string
           comment: string
           created_at?: string | null
           id?: string
           user_id?: string | null
         }
         Update: {
-          book_id?: string | null
+          book_id?: string
           comment?: string
           created_at?: string | null
           id?: string
@@ -43,21 +43,21 @@ export type Database = {
       }
       book_ratings: {
         Row: {
-          book_id: string | null
+          book_id: string
           created_at: string | null
           id: string
           rating: number
           user_id: string | null
         }
         Insert: {
-          book_id?: string | null
+          book_id: string
           created_at?: string | null
           id?: string
           rating: number
           user_id?: string | null
         }
         Update: {
-          book_id?: string | null
+          book_id?: string
           created_at?: string | null
           id?: string
           rating?: number
@@ -76,6 +76,7 @@ export type Database = {
       books: {
         Row: {
           author: string
+          category: string | null
           created_at: string
           description: string | null
           id: string
@@ -87,6 +88,7 @@ export type Database = {
         }
         Insert: {
           author: string
+          category?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -98,6 +100,7 @@ export type Database = {
         }
         Update: {
           author?: string
+          category?: string | null
           created_at?: string
           description?: string | null
           id?: string

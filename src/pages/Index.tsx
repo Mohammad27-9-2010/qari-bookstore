@@ -1,3 +1,4 @@
+
 import { Book, ShoppingCart, Mail, Sun, Moon, Globe } from "lucide-react";
 import { useState } from "react";
 import { cn, type Language, languages } from "@/lib/utils";
@@ -17,25 +18,28 @@ const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Sample books data
+  // Sample books data with categories
   const books: BookType[] = [
     {
-      id: "1",
+      id: "1",  // UUID will be generated on server side
       title: "كتاب الأيام",
       author: "طه حسين",
       price: 29.99,
+      category: "سيرة ذاتية"
     },
     {
       id: "2",
       title: "مقدمة ابن خلدون",
       author: "ابن خلدون",
       price: 34.99,
+      category: "تاريخ وفلسفة"
     },
     {
       id: "3",
       title: "ألف ليلة وليلة",
       author: "مؤلف مجهول",
       price: 24.99,
+      category: "أدب كلاسيكي"
     },
   ];
 
@@ -89,6 +93,7 @@ const Index = () => {
       subtitle: "وجهتك المميزة للكتب العربية والعالمية. شحن مجاني للطلبات التي تزيد عن 50 دولار",
       browse: "تصفح الكتب",
       featured: "الكتب المميزة",
+      category: "التصنيف",
       price: "السعر",
       addToCart: "أضف إلى السلة",
       register: "سجل الآن للشراء والتقييم",
@@ -99,6 +104,7 @@ const Index = () => {
       subtitle: "Your premium destination for Arabic and international literature. Free shipping worldwide on orders over $50.",
       browse: "Browse Books",
       featured: "Featured Books",
+      category: "Category",
       price: "Price",
       addToCart: "Add to Cart",
       register: "Register now to purchase and rate books",
@@ -109,6 +115,7 @@ const Index = () => {
       subtitle: "Votre destination premium pour la littérature arabe et internationale. Livraison gratuite dans le monde entier pour les commandes de plus de 50$.",
       browse: "Parcourir les Livres",
       featured: "Livres en Vedette",
+      category: "Catégorie",
       price: "Prix",
       addToCart: "Ajouter au Panier",
       register: "Inscrivez-vous pour acheter et noter",
@@ -222,7 +229,8 @@ const Index = () => {
                 <div className="aspect-[3/4] bg-gray-200 dark:bg-gray-700"></div>
                 <div className="p-6 space-y-4">
                   <h3 className="font-bold text-lg text-text-dark dark:text-white mb-2 font-arabic">{book.title}</h3>
-                  <p className="text-text-light dark:text-gray-300 mb-4 font-arabic">{book.author}</p>
+                  <p className="text-text-light dark:text-gray-300 mb-2 font-arabic">{book.author}</p>
+                  <p className="text-text-light dark:text-gray-300 mb-4 font-arabic">{t.category}: {book.category}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-primary font-bold font-arabic">{book.price} $</span>
                     <button 
@@ -249,3 +257,4 @@ const Index = () => {
 };
 
 export default Index;
+
