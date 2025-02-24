@@ -19,30 +19,35 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        if (error) throw error;
+        
+        if (signInError) throw signInError;
+        
+        navigate('/');
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth`,
             data: {
-              email_confirm: true // This will be used by RLS policies
+              email_confirm: false
             }
           }
         });
-        if (error) throw error;
+        
+        if (signUpError) throw signUpError;
+        
         toast({
           title: "نجاح",
           description: "تم إنشاء حسابك بنجاح",
         });
+        navigate('/');
       }
-      navigate('/');
     } catch (error: any) {
+      console.error('Auth error:', error);
       toast({
         title: "خطأ",
         description: error.message,
