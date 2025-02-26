@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "./button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "./use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 
 export function Navbar() {
@@ -13,15 +13,20 @@ export function Navbar() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogout = async () => {
+    if (isLoading) return;
+    
     try {
       setIsLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
 
-      navigate("/auth");
+      // Success toast
       toast({
         title: "تم تسجيل الخروج بنجاح",
       });
+
+      // Navigate after successful logout
+      navigate("/auth", { replace: true });
     } catch (error: any) {
       console.error('Logout error:', error);
       toast({
@@ -37,7 +42,7 @@ export function Navbar() {
   // Ensure user is redirected to auth page if not logged in
   useEffect(() => {
     if (!user) {
-      navigate("/auth");
+      navigate("/auth", { replace: true });
     }
   }, [user, navigate]);
 
