@@ -6,14 +6,13 @@ import { Minus, Plus, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import jsPDF from 'jspdf';
 
 interface CartModalProps {
   isOpen: boolean;
   onClose: () => void;
   items: CartItem[];
-  onUpdateQuantity: (bookId: string, change: number) => void;  // Updated to use string
-  onRemoveItem: (bookId: string) => void;  // Updated to use string
+  onUpdateQuantity: (bookId: string, change: number) => void;
+  onRemoveItem: (bookId: string) => void;
   lang: "en" | "ar" | "fr";
 }
 
@@ -29,6 +28,7 @@ const translations = {
     checkoutSuccess: "تم تقديم طلبك بنجاح",
     checkoutError: "حدث خطأ أثناء معالجة طلبك",
     loginRequired: "يرجى تسجيل الدخول للمتابعة",
+    phoneRequired: "رقم الهاتف مطلوب",
   },
   en: {
     cart: "Shopping Cart",
@@ -41,6 +41,7 @@ const translations = {
     checkoutSuccess: "Your order has been placed successfully",
     checkoutError: "An error occurred while processing your order",
     loginRequired: "Please log in to continue",
+    phoneRequired: "Phone number is required",
   },
   fr: {
     cart: "Panier",
@@ -53,6 +54,7 @@ const translations = {
     checkoutSuccess: "Votre commande a été passée avec succès",
     checkoutError: "Une erreur est survenue lors du traitement de votre commande",
     loginRequired: "Veuillez vous connecter pour continuer",
+    phoneRequired: "Numéro de téléphone requis",
   }
 };
 
@@ -64,45 +66,6 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
   const [isProcessing, setIsProcessing] = useState(false);
 
   const total = items.reduce((sum, item) => sum + item.book.price * item.quantity, 0);
-
-  const generateOrderPDF = (orderDetails: any) => {
-    const pdf = new jsPDF();
-    const textColor = '#000000';
-    
-    // Set up RTL for Arabic
-    if (lang === 'ar') {
-      pdf.setR2L(true);
-    }
-
-    // Add header
-    pdf.setFontSize(20);
-    pdf.setTextColor(textColor);
-    pdf.text(t.cart, 105, 20, { align: 'center' });
-
-    // Add order details
-    pdf.setFontSize(12);
-    let yPosition = 40;
-
-    // Add items
-    items.forEach((item) => {
-      pdf.text(`${item.book.title} x${item.quantity}`, 20, yPosition);
-      pdf.text(`$${(item.book.price * item.quantity).toFixed(2)}`, 180, yPosition, { align: 'right' });
-      yPosition += 10;
-    });
-
-    // Add total
-    pdf.setFontSize(14);
-    pdf.text('------------------------', 20, yPosition);
-    yPosition += 10;
-    pdf.text(`${t.total} $${total.toFixed(2)}`, 180, yPosition, { align: 'right' });
-
-    // Add contact info
-    yPosition += 20;
-    pdf.text(`${t.phone}: ${phoneNumber}`, 20, yPosition);
-
-    // Save the PDF
-    pdf.save(`order-${new Date().toISOString()}.pdf`);
-  };
 
   const startCheckout = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -119,8 +82,7 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
   const handleCheckout = async () => {
     if (!phoneNumber) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
+        title: t.phoneRequired,
         variant: "destructive",
       });
       return;
@@ -150,7 +112,7 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
       // Insert order items
       const orderItems = items.map(item => ({
         order_id: order.id,
-        book_id: item.book.id,  // Now this will be a string
+        book_id: item.book.id,
         quantity: item.quantity,
         price_at_time: item.book.price
       }));
@@ -160,9 +122,6 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
         .insert(orderItems);
 
       if (itemsError) throw itemsError;
-
-      // Generate and download PDF
-      generateOrderPDF({ order, items });
 
       toast({
         title: t.checkoutSuccess,
