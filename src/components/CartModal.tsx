@@ -6,6 +6,7 @@ import { Minus, Plus, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
 
 interface CartModalProps {
   isOpen: boolean;
@@ -200,12 +201,12 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
                 <label className="block text-sm font-medium mb-1 font-arabic" htmlFor="phone">
                   {t.phone}
                 </label>
-                <input
+                <Input
                   id="phone"
                   type="tel"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="w-full p-2 border rounded"
+                  className="w-full"
                   required
                 />
               </div>

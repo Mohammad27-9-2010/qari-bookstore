@@ -41,6 +41,44 @@ export type Database = {
           },
         ]
       }
+      book_progress: {
+        Row: {
+          book_id: string
+          created_at: string | null
+          finished_at: string | null
+          id: string
+          reading_notes: string | null
+          started_at: string | null
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string | null
+          finished_at?: string | null
+          id?: string
+          reading_notes?: string | null
+          started_at?: string | null
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string | null
+          finished_at?: string | null
+          id?: string
+          reading_notes?: string | null
+          started_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_progress_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       book_ratings: {
         Row: {
           book_id: string
