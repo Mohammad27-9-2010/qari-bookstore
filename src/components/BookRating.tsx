@@ -4,7 +4,6 @@ import { Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { Button } from '@/components/ui/button';
 
 interface BookRatingProps {
   bookId: string;
@@ -19,49 +18,53 @@ export const BookRating = ({ bookId }: BookRatingProps) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchRatings();
-    if (user) {
-      fetchUserRating();
+    if (bookId) {
+      fetchRatings();
+      if (user) {
+        fetchUserRating();
+      }
     }
   }, [bookId, user]);
 
   const fetchRatings = async () => {
-    const { data: ratings, error } = await supabase
-      .from('book_ratings')
-      .select('rating')
-      .eq('book_id', bookId);
+    try {
+      const { data: ratings, error } = await supabase
+        .from('book_ratings')
+        .select('rating')
+        .eq('book_id', bookId);
 
-    if (error) {
+      if (error) throw error;
+
+      if (ratings && ratings.length > 0) {
+        const average = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
+        setAverageRating(average);
+        setTotalRatings(ratings.length);
+      }
+    } catch (error: any) {
       console.error('Error fetching ratings:', error);
-      return;
-    }
-
-    if (ratings.length > 0) {
-      const average = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
-      setAverageRating(average);
-      setTotalRatings(ratings.length);
     }
   };
 
   const fetchUserRating = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('book_ratings')
-      .select('rating')
-      .eq('book_id', bookId)
-      .eq('user_id', user.id)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('book_ratings')
+        .select('rating')
+        .eq('book_id', bookId)
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-    if (error) {
-      if (error.code !== 'PGRST116') { // PGRST116 is the error code for no rows returned
-        console.error('Error fetching user rating:', error);
+      if (error && error.code !== 'PGRST116') { // PGRST116 is the error code for no rows returned
+        throw error;
       }
-      return;
-    }
 
-    if (data) {
-      setRating(data.rating);
+      if (data) {
+        setRating(data.rating);
+      }
+    } catch (error: any) {
+      console.error('Error fetching user rating:', error);
     }
   };
 
@@ -87,12 +90,13 @@ export const BookRating = ({ bookId }: BookRatingProps) => {
       if (error) throw error;
 
       setRating(value);
-      fetchRatings();
+      await fetchRatings();
       toast({
         title: "تم التقييم بنجاح",
         description: "شكراً لمشاركة رأيك",
       });
     } catch (error: any) {
+      console.error('Error submitting rating:', error);
       toast({
         title: "خطأ",
         description: error.message,

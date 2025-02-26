@@ -25,22 +25,27 @@ export const BookComments = ({ bookId }: BookCommentsProps) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchComments();
+    if (bookId) fetchComments();
   }, [bookId]);
 
   const fetchComments = async () => {
-    const { data, error } = await supabase
-      .from('book_comments')
-      .select('*')
-      .eq('book_id', bookId)
-      .order('created_at', { ascending: true });
+    try {
+      const { data, error } = await supabase
+        .from('book_comments')
+        .select('*')
+        .eq('book_id', bookId)
+        .order('created_at', { ascending: true });
 
-    if (error) {
+      if (error) throw error;
+      setComments(data || []);
+    } catch (error: any) {
       console.error('Error fetching comments:', error);
-      return;
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء تحميل التعليقات",
+        variant: "destructive",
+      });
     }
-
-    setComments(data || []);
   };
 
   const handleSubmitComment = async (e: React.FormEvent) => {
@@ -67,11 +72,12 @@ export const BookComments = ({ bookId }: BookCommentsProps) => {
       if (error) throw error;
 
       setNewComment('');
-      fetchComments();
+      await fetchComments();
       toast({
         title: "تم إضافة التعليق بنجاح",
       });
     } catch (error: any) {
+      console.error('Error submitting comment:', error);
       toast({
         title: "خطأ",
         description: error.message,
