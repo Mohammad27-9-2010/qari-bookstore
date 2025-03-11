@@ -1,9 +1,9 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CartItem } from "@/types/cart";
 import { Minus, Plus, X } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -67,15 +67,23 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
   const total = items.reduce((sum, item) => sum + item.book.price * item.quantity, 0);
 
   const startCheckout = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: t.loginRequired,
+          variant: "destructive",
+        });
+        return;
+      }
+      setIsCheckingOut(true);
+    } catch (error) {
+      console.error("Auth error:", error);
       toast({
         title: t.loginRequired,
         variant: "destructive",
       });
-      return;
     }
-    setIsCheckingOut(true);
   };
 
   const handleSendViaWhatsApp = async () => {
@@ -194,6 +202,7 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="font-arabic">{t.cart}</DialogTitle>
+          <DialogDescription></DialogDescription>
         </DialogHeader>
         <div className="mt-4 space-y-4">
           {items.length === 0 ? (
