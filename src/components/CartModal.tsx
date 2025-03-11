@@ -6,7 +6,6 @@ import { Minus, Plus, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
 
 interface CartModalProps {
   isOpen: boolean;
@@ -24,12 +23,9 @@ const translations = {
     total: "المجموع:",
     checkout: "إتمام الشراء",
     close: "إغلاق",
-    phone: "رقم الهاتف",
-    submit: "تأكيد الطلب",
     checkoutSuccess: "تم تقديم طلبك بنجاح",
     checkoutError: "حدث خطأ أثناء معالجة طلبك",
     loginRequired: "يرجى تسجيل الدخول للمتابعة",
-    phoneRequired: "رقم الهاتف مطلوب",
     directOrder: "طلب مباشر عبر",
     whatsapp: "واتساب",
     email: "البريد الإلكتروني",
@@ -40,12 +36,9 @@ const translations = {
     total: "Total:",
     checkout: "Checkout",
     close: "Close",
-    phone: "Phone Number",
-    submit: "Place Order",
     checkoutSuccess: "Your order has been placed successfully",
     checkoutError: "An error occurred while processing your order",
     loginRequired: "Please log in to continue",
-    phoneRequired: "Phone number is required",
     directOrder: "Direct order via",
     whatsapp: "WhatsApp",
     email: "Email",
@@ -56,12 +49,9 @@ const translations = {
     total: "Total:",
     checkout: "Commander",
     close: "Fermer",
-    phone: "Numéro de téléphone",
-    submit: "Confirmer la commande",
     checkoutSuccess: "Votre commande a été passée avec succès",
     checkoutError: "Une erreur est survenue lors du traitement de votre commande",
     loginRequired: "Veuillez vous connecter pour continuer",
-    phoneRequired: "Numéro de téléphone requis",
     directOrder: "Commander directement via",
     whatsapp: "WhatsApp",
     email: "Email",
@@ -72,7 +62,6 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
   const { toast } = useToast();
   const t = translations[lang];
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
   const total = items.reduce((sum, item) => sum + item.book.price * item.quantity, 0);
@@ -90,22 +79,15 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
   };
 
   const handleSendViaWhatsApp = async () => {
-    if (!phoneNumber) {
-      toast({
-        title: t.phoneRequired,
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
+      setIsProcessing(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
       const userEmail = session.user.email;
       
       // Prepare the message
-      let message = `New order from ${userEmail} (Phone: ${phoneNumber}):\n\n`;
+      let message = `New order from ${userEmail}:\n\n`;
       items.forEach(item => {
         message += `- ${item.book.title} (${item.quantity}x) - $${(item.book.price * item.quantity).toFixed(2)}\n`;
       });
@@ -121,7 +103,7 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
       const orderData = {
         user_id: session.user.id,
         total_amount: total,
-        shipping_address: { phone_number: phoneNumber, email: userEmail },
+        shipping_address: { email: userEmail },
         status: 'pending'
       };
 
@@ -140,7 +122,6 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
       
       onClose();
       setIsCheckingOut(false);
-      setPhoneNumber("");
     } catch (error) {
       console.error('WhatsApp error:', error);
       toast({
@@ -148,19 +129,14 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleSendViaEmail = async () => {
-    if (!phoneNumber) {
-      toast({
-        title: t.phoneRequired,
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
+      setIsProcessing(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
@@ -169,7 +145,7 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
       // Prepare the email subject and body
       const subject = encodeURIComponent(`New Book Order from ${userEmail}`);
       
-      let body = `New order from ${userEmail} (Phone: ${phoneNumber}):%0D%0A%0D%0A`;
+      let body = `New order from ${userEmail}:%0D%0A%0D%0A`;
       items.forEach(item => {
         body += `- ${item.book.title} (${item.quantity}x) - $${(item.book.price * item.quantity).toFixed(2)}%0D%0A`;
       });
@@ -179,7 +155,7 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
       const orderData = {
         user_id: session.user.id,
         total_amount: total,
-        shipping_address: { phone_number: phoneNumber, email: userEmail },
+        shipping_address: { email: userEmail },
         status: 'pending'
       };
 
@@ -201,7 +177,6 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
       
       onClose();
       setIsCheckingOut(false);
-      setPhoneNumber("");
     } catch (error) {
       console.error('Email error:', error);
       toast({
@@ -209,6 +184,8 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -267,19 +244,6 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
             </>
           ) : (
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1 font-arabic" htmlFor="phone">
-                  {t.phone}
-                </label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="w-full"
-                  required
-                />
-              </div>
               <p className="text-center font-arabic">{t.directOrder}</p>
               <div className="flex gap-2">
                 <Button 
