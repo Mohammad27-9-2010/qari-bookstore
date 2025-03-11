@@ -30,6 +30,9 @@ const translations = {
     checkoutError: "حدث خطأ أثناء معالجة طلبك",
     loginRequired: "يرجى تسجيل الدخول للمتابعة",
     phoneRequired: "رقم الهاتف مطلوب",
+    directOrder: "طلب مباشر عبر",
+    whatsapp: "واتساب",
+    email: "البريد الإلكتروني",
   },
   en: {
     cart: "Shopping Cart",
@@ -43,6 +46,9 @@ const translations = {
     checkoutError: "An error occurred while processing your order",
     loginRequired: "Please log in to continue",
     phoneRequired: "Phone number is required",
+    directOrder: "Direct order via",
+    whatsapp: "WhatsApp",
+    email: "Email",
   },
   fr: {
     cart: "Panier",
@@ -56,6 +62,9 @@ const translations = {
     checkoutError: "Une erreur est survenue lors du traitement de votre commande",
     loginRequired: "Veuillez vous connecter pour continuer",
     phoneRequired: "Numéro de téléphone requis",
+    directOrder: "Commander directement via",
+    whatsapp: "WhatsApp",
+    email: "Email",
   }
 };
 
@@ -80,7 +89,7 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
     setIsCheckingOut(true);
   };
 
-  const handleCheckout = async () => {
+  const handleSendViaWhatsApp = async () => {
     if (!phoneNumber) {
       toast({
         title: t.phoneRequired,
@@ -89,56 +98,117 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
       return;
     }
 
-    setIsProcessing(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
+      const userEmail = session.user.email;
+      
+      // Prepare the message
+      let message = `New order from ${userEmail} (Phone: ${phoneNumber}):\n\n`;
+      items.forEach(item => {
+        message += `- ${item.book.title} (${item.quantity}x) - $${(item.book.price * item.quantity).toFixed(2)}\n`;
+      });
+      message += `\nTotal: $${total.toFixed(2)}`;
+      
+      // Encode the message for WhatsApp URL
+      const encodedMessage = encodeURIComponent(message);
+      
+      // Create a WhatsApp URL
+      const whatsappUrl = `https://wa.me/212632491166?text=${encodedMessage}`;
+      
+      // Save order details to database
       const orderData = {
         user_id: session.user.id,
         total_amount: total,
-        shipping_address: { phone_number: phoneNumber },
+        shipping_address: { phone_number: phoneNumber, email: userEmail },
         status: 'pending'
       };
 
-      // Insert the order into the database
-      const { data: order, error: orderError } = await supabase
+      const { error: orderError } = await supabase
         .from('orders')
-        .insert(orderData)
-        .select()
-        .single();
+        .insert(orderData);
 
       if (orderError) throw orderError;
-
-      // Insert order items
-      const orderItems = items.map(item => ({
-        order_id: order.id,
-        book_id: item.book.id,
-        quantity: item.quantity,
-        price_at_time: item.book.price
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
-
+      
+      // Open WhatsApp in a new window
+      window.open(whatsappUrl, '_blank');
+      
       toast({
         title: t.checkoutSuccess,
       });
+      
       onClose();
       setIsCheckingOut(false);
       setPhoneNumber("");
     } catch (error) {
-      console.error('Checkout error:', error);
+      console.error('WhatsApp error:', error);
       toast({
         title: t.checkoutError,
         description: error.message,
         variant: "destructive",
       });
-    } finally {
-      setIsProcessing(false);
+    }
+  };
+
+  const handleSendViaEmail = async () => {
+    if (!phoneNumber) {
+      toast({
+        title: t.phoneRequired,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const userEmail = session.user.email;
+      
+      // Prepare the email subject and body
+      const subject = encodeURIComponent(`New Book Order from ${userEmail}`);
+      
+      let body = `New order from ${userEmail} (Phone: ${phoneNumber}):%0D%0A%0D%0A`;
+      items.forEach(item => {
+        body += `- ${item.book.title} (${item.quantity}x) - $${(item.book.price * item.quantity).toFixed(2)}%0D%0A`;
+      });
+      body += `%0D%0ATotal: $${total.toFixed(2)}`;
+      
+      // Save order details to database
+      const orderData = {
+        user_id: session.user.id,
+        total_amount: total,
+        shipping_address: { phone_number: phoneNumber, email: userEmail },
+        status: 'pending'
+      };
+
+      const { error: orderError } = await supabase
+        .from('orders')
+        .insert(orderData);
+
+      if (orderError) throw orderError;
+      
+      // Create the mailto link
+      const mailtoLink = `mailto:qaree.bookshop@gmail.com?subject=${subject}&body=${body}`;
+      
+      // Open the email client
+      window.location.href = mailtoLink;
+      
+      toast({
+        title: t.checkoutSuccess,
+      });
+      
+      onClose();
+      setIsCheckingOut(false);
+      setPhoneNumber("");
+    } catch (error) {
+      console.error('Email error:', error);
+      toast({
+        title: t.checkoutError,
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -210,13 +280,24 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
                   required
                 />
               </div>
-              <Button 
-                className="w-full font-arabic" 
-                onClick={handleCheckout}
-                disabled={isProcessing}
-              >
-                {t.submit}
-              </Button>
+              <p className="text-center font-arabic">{t.directOrder}</p>
+              <div className="flex gap-2">
+                <Button 
+                  className="flex-1 font-arabic" 
+                  onClick={handleSendViaWhatsApp}
+                  disabled={isProcessing}
+                >
+                  {t.whatsapp}
+                </Button>
+                <Button 
+                  className="flex-1 font-arabic" 
+                  onClick={handleSendViaEmail}
+                  disabled={isProcessing}
+                  variant="outline"
+                >
+                  {t.email}
+                </Button>
+              </div>
             </div>
           )}
         </div>
