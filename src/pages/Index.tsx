@@ -19,10 +19,9 @@ const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Sample books data with categories
   const books: BookType[] = [
     {
-      id: "1",  // UUID will be generated on server side
+      id: "1",
       title: "كتاب الأيام",
       author: "طه حسين",
       price: 29.99,
@@ -139,10 +138,9 @@ const Index = () => {
 
   return (
     <div className={cn(
-      "min-h-screen bg-secondary-light dark:bg-text-dark transition-colors duration-300",
+      "min-h-screen bg-gradient-to-br from-secondary-light via-background to-secondary dark:from-text-dark dark:via-background dark:to-text transition-colors duration-300",
       theme === "dark" ? "dark" : ""
     )}>
-      {/* Navigation */}
       <nav className="fixed top-0 w-full bg-white/80 dark:bg-black/80 backdrop-blur-lg shadow-sm z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
@@ -187,7 +185,6 @@ const Index = () => {
         </div>
       </nav>
 
-      {/* Cart Modal */}
       <CartModal
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
@@ -197,10 +194,9 @@ const Index = () => {
         lang={lang}
       />
 
-      {/* Hero Section */}
       <section className="pt-24 pb-16 px-4">
         <div className="container mx-auto">
-          <div className="max-w-3xl mx-auto text-center space-y-6 animate-fade-in">
+          <div className="max-w-3xl mx-auto text-center space-y-6 animate-fade-in backdrop-blur-sm bg-white/30 dark:bg-black/30 p-8 rounded-2xl border border-white/20 dark:border-white/10">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-text-dark font-arabic">
               {t.title}
             </h1>
@@ -231,11 +227,10 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Search Bar */}
-      <section className="py-8 bg-white dark:bg-gray-800">
+      <section className="py-8">
         <div className="container mx-auto px-4">
           <div className="max-w-xl mx-auto">
-            <div className="relative">
+            <div className="relative backdrop-blur-xl bg-white/60 dark:bg-black/60 rounded-lg border border-white/20 dark:border-white/10 shadow-lg">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <Input
                 type="text"
@@ -249,15 +244,17 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Books */}
-      <section className="py-16 bg-secondary">
+      <section className="py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-text-dark text-center mb-12 font-arabic">{t.featured}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredBooks.map((book) => (
-              <div key={book.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:-translate-y-1 animate-scale-in">
-                <div className="aspect-[3/4] bg-gray-200 dark:bg-gray-700"></div>
-                <div className="p-6 space-y-4">
+              <div 
+                key={book.id} 
+                className="backdrop-blur-xl bg-white/40 dark:bg-black/40 rounded-lg border border-white/20 dark:border-white/10 shadow-lg overflow-hidden transition-all duration-300 hover:transform hover:scale-[1.02] hover:shadow-xl"
+              >
+                <div className="aspect-[3/4] bg-gradient-to-br from-gray-200/80 to-gray-100/80 dark:from-gray-700/80 dark:to-gray-800/80"></div>
+                <div className="p-6 space-y-4 backdrop-blur-sm bg-white/30 dark:bg-black/30">
                   <h3 className="font-bold text-lg text-text-dark dark:text-white mb-2 font-arabic">{book.title}</h3>
                   <p className="text-text-light dark:text-gray-300 mb-2 font-arabic">{book.author}</p>
                   <p className="text-text-light dark:text-gray-300 mb-4 font-arabic">{t.category}: {book.category}</p>
