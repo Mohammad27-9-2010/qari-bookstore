@@ -104,7 +104,7 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
       // Encode the message for WhatsApp URL
       const encodedMessage = encodeURIComponent(message);
       
-      // Create a WhatsApp URL
+      // Create a WhatsApp URL with the international format for the phone number
       const whatsappUrl = `https://wa.me/212632491166?text=${encodedMessage}`;
       
       // Save order details to database
@@ -198,7 +198,9 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) onClose();
+    }}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="font-arabic">{t.cart}</DialogTitle>
@@ -247,7 +249,11 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
                 <span className="font-bold font-arabic">{t.total}</span>
                 <span className="font-bold">{total.toFixed(2)} $</span>
               </div>
-              <Button className="w-full font-arabic" onClick={startCheckout}>
+              <Button 
+                className="w-full font-arabic" 
+                onClick={startCheckout}
+                disabled={items.length === 0}
+              >
                 {t.checkout}
               </Button>
             </>
