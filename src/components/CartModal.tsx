@@ -98,14 +98,17 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
       // Create a WhatsApp URL with the international format for the phone number
       const whatsappUrl = `https://wa.me/212632491166?text=${encodedMessage}`;
       
-      // Open WhatsApp in a new window
+      // Open WhatsApp in a new tab/window
       window.open(whatsappUrl, '_blank');
       
-      toast({
-        title: t.checkoutSuccess,
-      });
-      
-      onClose();
+      // Only show success toast after successful redirect
+      setTimeout(() => {
+        toast({
+          title: t.checkoutSuccess,
+        });
+        
+        onClose();
+      }, 500);
     } catch (error) {
       console.error('WhatsApp error:', error);
       toast({
