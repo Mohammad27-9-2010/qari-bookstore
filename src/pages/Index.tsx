@@ -1,4 +1,4 @@
-import { Book, ShoppingCart, Mail, Sun, Moon, Globe, Search } from "lucide-react";
+import { Book, ShoppingCart, Mail, Sun, Moon, Globe, Search, LogOut } from "lucide-react";
 import { useState } from "react";
 import { cn, type Language, languages } from "@/lib/utils";
 import { CartModal } from "@/components/CartModal";
@@ -9,6 +9,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -16,8 +18,10 @@ const Index = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const books: BookType[] = [
     {
@@ -93,6 +97,31 @@ const Index = () => {
 
   const removeCartItem = (bookId: string) => {
     setCartItems((prevItems) => prevItems.filter((item) => item.book.id !== bookId));
+  };
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    
+    try {
+      setIsLoggingOut(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      toast({
+        title: "تم تسجيل الخروج بنجاح",
+      });
+
+      navigate("/auth", { replace: true });
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      toast({
+        title: "خطأ في تسجيل الخروج",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const content = {
@@ -181,6 +210,16 @@ const Index = () => {
                 </span>
               )}
             </button>
+            {user && (
+              <button 
+                onClick={handleLogout}
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                aria-label="تسجيل الخروج"
+                disabled={isLoggingOut}
+              >
+                <LogOut className="w-5 h-5 text-primary" />
+              </button>
+            )}
           </div>
         </div>
       </nav>

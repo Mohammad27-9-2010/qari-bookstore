@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CartItem } from "@/types/cart";
 import { Minus, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface CartModalProps {
@@ -63,6 +63,14 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
   const t = translations[lang];
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Reset the checkout state when the modal opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setIsCheckingOut(false);
+      setIsProcessing(false);
+    }
+  }, [isOpen]);
 
   const total = items.reduce((sum, item) => sum + item.book.price * item.quantity, 0);
 
