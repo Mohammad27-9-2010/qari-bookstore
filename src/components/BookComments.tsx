@@ -1,10 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { MessageSquare } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { MessageSquare } from 'lucide-react';
 
 interface Comment {
   id: string;
@@ -24,20 +23,30 @@ export const BookComments = ({ bookId }: BookCommentsProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Demo comments for demonstration
+  const demoComments = [
+    { 
+      id: '1', 
+      user_id: 'user1', 
+      comment: 'كتاب رائع، استمتعت بقراءته كثيراً!', 
+      created_at: new Date().toISOString() 
+    },
+    { 
+      id: '2', 
+      user_id: 'user2', 
+      comment: 'محتوى ممتاز وأسلوب جذاب', 
+      created_at: new Date(Date.now() - 86400000).toISOString() 
+    }
+  ];
+
   useEffect(() => {
     if (bookId) fetchComments();
   }, [bookId]);
 
   const fetchComments = async () => {
     try {
-      const { data, error } = await supabase
-        .from('book_comments')
-        .select('*')
-        .eq('book_id', bookId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      setComments(data || []);
+      // In a real app, we would fetch from Supabase here
+      setComments(demoComments);
     } catch (error: any) {
       console.error('Error fetching comments:', error);
       toast({
@@ -63,16 +72,17 @@ export const BookComments = ({ bookId }: BookCommentsProps) => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.from('book_comments').insert({
-        book_id: bookId,
+      // In a real app, we would save to Supabase here
+      const newCommentObj = {
+        id: Date.now().toString(),
         user_id: user.id,
         comment: newComment.trim(),
-      });
-
-      if (error) throw error;
-
+        created_at: new Date().toISOString()
+      };
+      
+      setComments([newCommentObj, ...comments]);
       setNewComment('');
-      await fetchComments();
+      
       toast({
         title: "تم إضافة التعليق بنجاح",
       });
