@@ -74,33 +74,16 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
 
   const total = items.reduce((sum, item) => sum + item.book.price * item.quantity, 0);
 
-  const startCheckout = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: t.loginRequired,
-          variant: "destructive",
-        });
-        return;
-      }
-      setIsCheckingOut(true);
-    } catch (error) {
-      console.error("Auth error:", error);
-      toast({
-        title: t.loginRequired,
-        variant: "destructive",
-      });
-    }
+  const startCheckout = () => {
+    setIsCheckingOut(true);
   };
 
-  const handleSendViaWhatsApp = async () => {
+  const handleSendViaWhatsApp = () => {
     try {
       setIsProcessing(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
-      const userEmail = session.user.email;
+      
+      // Get user email if available
+      const userEmail = "customer"; // Default fallback
       
       // Prepare the message
       let message = `New order from ${userEmail}:\n\n`;
@@ -114,20 +97,6 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
       
       // Create a WhatsApp URL with the international format for the phone number
       const whatsappUrl = `https://wa.me/212632491166?text=${encodedMessage}`;
-      
-      // Save order details to database
-      const orderData = {
-        user_id: session.user.id,
-        total_amount: total,
-        shipping_address: { email: userEmail },
-        status: 'pending'
-      };
-
-      const { error: orderError } = await supabase
-        .from('orders')
-        .insert(orderData);
-
-      if (orderError) throw orderError;
       
       // Open WhatsApp in a new window
       window.open(whatsappUrl, '_blank');
@@ -149,36 +118,18 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
     }
   };
 
-  const handleSendViaEmail = async () => {
+  const handleSendViaEmail = () => {
     try {
       setIsProcessing(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
-      const userEmail = session.user.email;
       
       // Prepare the email subject and body
-      const subject = encodeURIComponent(`New Book Order from ${userEmail}`);
+      const subject = encodeURIComponent(`New Book Order`);
       
-      let body = `New order from ${userEmail}:%0D%0A%0D%0A`;
+      let body = `New book order:%0D%0A%0D%0A`;
       items.forEach(item => {
         body += `- ${item.book.title} (${item.quantity}x) - $${(item.book.price * item.quantity).toFixed(2)}%0D%0A`;
       });
       body += `%0D%0ATotal: $${total.toFixed(2)}`;
-      
-      // Save order details to database
-      const orderData = {
-        user_id: session.user.id,
-        total_amount: total,
-        shipping_address: { email: userEmail },
-        status: 'pending'
-      };
-
-      const { error: orderError } = await supabase
-        .from('orders')
-        .insert(orderData);
-
-      if (orderError) throw orderError;
       
       // Create the mailto link
       const mailtoLink = `mailto:qaree.bookshop@gmail.com?subject=${subject}&body=${body}`;
