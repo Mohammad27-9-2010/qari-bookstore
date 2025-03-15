@@ -137,7 +137,6 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
       });
       
       onClose();
-      setIsCheckingOut(false);
     } catch (error) {
       console.error('WhatsApp error:', error);
       toast({
@@ -192,7 +191,6 @@ export const CartModal = ({ isOpen, onClose, items, onUpdateQuantity, onRemoveIt
       });
       
       onClose();
-      setIsCheckingOut(false);
     } catch (error) {
       console.error('Email error:', error);
       toast({
