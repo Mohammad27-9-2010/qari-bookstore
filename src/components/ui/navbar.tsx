@@ -11,6 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 export function Navbar() {
   const { user } = useAuth();
@@ -72,8 +73,8 @@ export function Navbar() {
             </div>
             <div className="flex items-center gap-4">
               {user ? (
-                <Popover>
-                  <PopoverTrigger asChild>
+                <HoverCard openDelay={0} closeDelay={100}>
+                  <HoverCardTrigger asChild>
                     <Button 
                       variant="outline" 
                       className="relative font-arabic backdrop-blur-sm bg-white/10 dark:bg-black/10 hover:bg-white/20 dark:hover:bg-black/20 transition-all flex items-center gap-2"
@@ -81,8 +82,8 @@ export function Navbar() {
                       <User className="h-4 w-4" />
                       <span>الملف الشخصي</span>
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-60" align="end">
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-72" align="end">
                     <div className="space-y-3">
                       <div className="space-y-1 border-b pb-3">
                         <h4 className="font-medium font-arabic text-center">الحساب الشخصي</h4>
@@ -137,8 +138,8 @@ export function Navbar() {
                         </Button>
                       </div>
                     </div>
-                  </PopoverContent>
-                </Popover>
+                  </HoverCardContent>
+                </HoverCard>
               ) : null}
             </div>
           </div>
