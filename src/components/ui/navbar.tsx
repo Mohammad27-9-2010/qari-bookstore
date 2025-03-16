@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "./button";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,17 +25,13 @@ export function Navbar() {
     
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
-      // Success toast
+      await supabase.auth.signOut();
+      
       toast({
         title: "تم تسجيل الخروج بنجاح",
       });
       
-      // Redirect to home page after logout
       navigate("/");
-      window.location.reload(); // Force reload to ensure auth state is updated
     } catch (error: any) {
       console.error('Logout error:', error);
       toast({
