@@ -33,6 +33,10 @@ export function Navbar() {
       toast({
         title: "تم تسجيل الخروج بنجاح",
       });
+      
+      // Redirect to home page after logout
+      navigate("/");
+      window.location.reload(); // Force reload to ensure auth state is updated
     } catch (error: any) {
       console.error('Logout error:', error);
       toast({
