@@ -1,9 +1,10 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "./button";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export function Navbar() {
   const { user } = useAuth();
@@ -23,9 +24,6 @@ export function Navbar() {
       toast({
         title: "تم تسجيل الخروج بنجاح",
       });
-
-      // Navigate after successful logout
-      navigate("/auth", { replace: true });
     } catch (error: any) {
       console.error('Logout error:', error);
       toast({
@@ -37,13 +35,6 @@ export function Navbar() {
       setIsLoading(false);
     }
   };
-
-  // Ensure user is redirected to auth page if not logged in
-  useEffect(() => {
-    if (!user) {
-      navigate("/auth", { replace: true });
-    }
-  }, [user, navigate]);
 
   return (
     <nav className="fixed top-0 w-full z-50">
@@ -73,15 +64,7 @@ export function Navbar() {
                     {isLoading ? "جاري تسجيل الخروج..." : "تسجيل خروج"}
                   </Button>
                 </div>
-              ) : (
-                <Button
-                  onClick={() => navigate("/auth")}
-                  variant="outline"
-                  className="font-arabic backdrop-blur-sm bg-white/10 dark:bg-black/10 hover:bg-white/20 dark:hover:bg-black/20 transition-all"
-                >
-                  تسجيل الدخول
-                </Button>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
